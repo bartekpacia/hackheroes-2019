@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="pl.baftek.hackheroes_2019">
 
+    <meta-data
+        android:name="com.google.firebase.ml.vision.DEPENDENCIES"
+        android:value="label" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
