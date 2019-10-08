@@ -12,15 +12,13 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.firebase.ml.vision.FirebaseVision
-import com.google.firebase.ml.vision.common.FirebaseVisionImage
-import com.google.firebase.ml.vision.label.FirebaseVisionCloudImageLabelerOptions
+import androidx.lifecycle.observe
 import kotlinx.android.synthetic.main.activity_main.*
-import java.math.RoundingMode
 
 private const val TAG = "MainActivity"
 private const val REQUEST_CODE_CAMERA_PERMISSION = 10
@@ -35,24 +33,16 @@ private val ASPECT_RATIO = Rational(16, 9)
 
 class MainActivity : AppCompatActivity() {
 
-    private val analyzer: ImageAnalyzer = ImageAnalyzer()
-
     private lateinit var analysis: ImageAnalysis
     private lateinit var adapter: ArrayAdapter<String>
 
-    private val labelerOptions = FirebaseVisionCloudImageLabelerOptions.Builder()
-        .setConfidenceThreshold(0.7f)
-        .build()
-
-    private val labeler = FirebaseVision.getInstance().getCloudImageLabeler(labelerOptions)
-
-    private val results: MutableList<String> = mutableListOf()
+    private val viewModel: MainActivityViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, results)
+        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, viewModel.results.value!!)
         listResults.adapter = adapter
 
         // Request camera permissions
@@ -68,6 +58,12 @@ class MainActivity : AppCompatActivity() {
         // Every time the provided texture view changes, recompute layout
         viewfinder.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             updateTransform()
+        }
+
+        viewModel.results.observe(this) { results: MutableList<String> ->
+            listResults.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, results)
+            listResults.invalidate()
+            Toast.makeText(this, "new results!", LENGTH_SHORT).show()
         }
     }
 
@@ -172,31 +168,7 @@ class MainActivity : AppCompatActivity() {
 
             val analysis = ImageAnalysis(analysisConfig)
             analysis.setAnalyzer { image: ImageProxy?, rotationDegrees: Int ->
-                val mediaImage = image?.image ?: return@setAnalyzer
-                val imageRotation = ImageAnalyzer.degreesToFirebaseRotation(rotationDegrees)
-
-                val visionImage = FirebaseVisionImage.fromMediaImage(mediaImage, imageRotation)
-
-
-                labeler.processImage(visionImage)
-                    .addOnSuccessListener { labels ->
-                        results.clear()
-
-                        labels.forEach {
-                            val resultDebug =
-                                "text: ${it.text}, entityId: ${it.entityId}, confidence: ${it.confidence}"
-                            val result = "${it.text}, ${it.confidence.toBigDecimal().setScale(
-                                2,
-                                RoundingMode.UP
-                            ).toDouble() * 100} %"
-
-                            Log.d(TAG, resultDebug)
-                            results.add(result)
-                        }
-
-                        adapter.notifyDataSetChanged()
-                    }
-                    .addOnFailureListener { exception -> exception.printStackTrace() }
+                viewModel.analyzeImage(image, rotationDegrees)
             }
 
             return analysis
@@ -207,10 +179,9 @@ class MainActivity : AppCompatActivity() {
         val capture = initCapture()
         analysis = initAnalysis()
 
-        // Bind use cases to lifecycle
         CameraX.bindToLifecycle(this, preview)
         CameraX.bindToLifecycle(this, capture)
-        // CameraX.bindToLifecycle(this, analysis)
+        // CameraX.bindToLifecycle(this, analysis) // It throttles the device heavily
     }
 
     private fun updateTransform() {
