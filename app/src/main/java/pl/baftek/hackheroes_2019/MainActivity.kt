@@ -26,12 +26,12 @@ private const val TAG = "MainActivity"
 private const val REQUEST_CODE_CAMERA_PERMISSION = 10
 
 // Camera related config
-private const val WIDTH = 740
-private const val HEIGHT = 740
+private const val WIDTH = 720
+private const val HEIGHT = 1280
 private const val ROTATION = Surface.ROTATION_0
 
 private val RESOULTION = Size(WIDTH, HEIGHT)
-private val ASPECT_RATIO = Rational(1, 1)
+private val ASPECT_RATIO = Rational(16, 9)
 
 class MainActivity : AppCompatActivity() {
 
