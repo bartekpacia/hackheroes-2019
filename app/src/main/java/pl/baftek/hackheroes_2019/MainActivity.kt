@@ -74,62 +74,73 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startCamera() {
+
         // Create configuration object for the viewfinder use case
-        val previewConfig = PreviewConfig.Builder().apply {
-            setTargetAspectRatio(Rational(1, 1))
-            setTargetResolution(Size(WIDTH, HEIGHT))
-        }.build()
+        fun initPreview(): Preview {
+            val previewConfig = PreviewConfig.Builder().apply {
+                setTargetAspectRatio(Rational(1, 1))
+                setTargetResolution(Size(WIDTH, HEIGHT))
+            }.build()
 
-        val preview = Preview(previewConfig)
+            val preview = Preview(previewConfig)
 
-        // Every time the viewfinder is updated, recompute layout
-        preview.setOnPreviewOutputUpdateListener { previewOutput: Preview.PreviewOutput ->
+            // Every time the viewfinder is updated, recompute layout
+            preview.setOnPreviewOutputUpdateListener { previewOutput: Preview.PreviewOutput ->
 
-            // To update the SurfaceTexture, we have to remove it and re-add it
-            val parent = viewfinder.parent as ViewGroup
-            parent.removeView(viewfinder)
-            parent.addView(viewfinder, 0)
+                // To update the SurfaceTexture, we have to remove it and re-add it
+                val parent = viewfinder.parent as ViewGroup
+                parent.removeView(viewfinder)
+                parent.addView(viewfinder, 0)
 
-            viewfinder.surfaceTexture = previewOutput.surfaceTexture
-            updateTransform()
+                viewfinder.surfaceTexture = previewOutput.surfaceTexture
+                updateTransform()
+            }
+
+            return preview
         }
 
-        val captureConfig = ImageCaptureConfig.Builder()
-            .setTargetAspectRatio(Rational(16, 9))
-            .setTargetRotation(Surface.ROTATION_0)
-            .setTargetResolution(Size(WIDTH, HEIGHT))
-            .setFlashMode(FlashMode.AUTO)
-            .setCaptureMode(ImageCapture.CaptureMode.MIN_LATENCY)
-            .build()
+        fun initCapture(): ImageCapture {
+            val captureConfig = ImageCaptureConfig.Builder()
+                .setTargetAspectRatio(Rational(16, 9))
+                .setTargetRotation(Surface.ROTATION_0)
+                .setTargetResolution(Size(WIDTH, HEIGHT))
+                .setFlashMode(FlashMode.AUTO)
+                .setCaptureMode(ImageCapture.CaptureMode.MIN_LATENCY)
+                .build()
 
-        val capture = ImageCapture(captureConfig)
+            val capture = ImageCapture(captureConfig)
 
-        buttonShutter.setOnClickListener {
+            buttonShutter.setOnClickListener {
 
-            capture.takePicture(object : ImageCapture.OnImageCapturedListener() {
-                override fun onCaptureSuccess(image: ImageProxy?, rotationDegrees: Int) {
-                    analyzer.analyze(image, rotationDegrees)
+                capture.takePicture(object : ImageCapture.OnImageCapturedListener() {
+                    override fun onCaptureSuccess(image: ImageProxy?, rotationDegrees: Int) {
+                        analyzer.analyze(image, rotationDegrees)
 
-                    super.onCaptureSuccess(image, rotationDegrees)
-                }
+                        super.onCaptureSuccess(image, rotationDegrees)
+                    }
 
-                override fun onError(
-                    imageCaptureError: ImageCapture.ImageCaptureError,
-                    message: String,
-                    cause: Throwable?
-                ) {
-                    super.onError(imageCaptureError, message, cause)
-                    Toast.makeText(this@MainActivity, "error while taking picture", LENGTH_SHORT).show()
-                }
-            })
+                    override fun onError(
+                        imageCaptureError: ImageCapture.ImageCaptureError,
+                        message: String,
+                        cause: Throwable?
+                    ) {
+                        super.onError(imageCaptureError, message, cause)
+                        Toast.makeText(this@MainActivity, "error while taking picture", LENGTH_SHORT).show()
+                    }
+                })
+            }
+            return capture
         }
+
+        val preview = initPreview()
+        val capture = initCapture()
 
         // Bind use cases to lifecycle
         CameraX.bindToLifecycle(this, preview)
         CameraX.bindToLifecycle(this, capture)
     }
 
-    private fun updateTransform() {
+    fun updateTransform() {
         val matrix = Matrix()
 
         // Compute the center of the view finder
