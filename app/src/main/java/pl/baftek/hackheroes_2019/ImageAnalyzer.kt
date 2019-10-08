@@ -18,6 +18,7 @@ class ImageAnalyzer : ImageAnalysis.Analyzer {
 
     private val labeler = FirebaseVision.getInstance().getCloudImageLabeler(labelerOptions)
 
+
     override fun analyze(image: ImageProxy?, rotationDegrees: Int) {
         val mediaImage = image?.image ?: return
         val imageRotation = degreesToFirebaseRotation(rotationDegrees)
@@ -34,11 +35,13 @@ class ImageAnalyzer : ImageAnalysis.Analyzer {
             .addOnFailureListener { exception -> exception.printStackTrace() }
     }
 
-    private fun degreesToFirebaseRotation(rotationDegrees: Int): Int = when (rotationDegrees) {
-        0 -> FirebaseVisionImageMetadata.ROTATION_0
-        90 -> FirebaseVisionImageMetadata.ROTATION_90
-        180 -> FirebaseVisionImageMetadata.ROTATION_180
-        270 -> FirebaseVisionImageMetadata.ROTATION_270
-        else -> throw Exception("Rotation must be 0, 90, 180, or 270")
+    companion object {
+        fun degreesToFirebaseRotation(rotationDegrees: Int): Int = when (rotationDegrees) {
+            0 -> FirebaseVisionImageMetadata.ROTATION_0
+            90 -> FirebaseVisionImageMetadata.ROTATION_90
+            180 -> FirebaseVisionImageMetadata.ROTATION_180
+            270 -> FirebaseVisionImageMetadata.ROTATION_270
+            else -> throw Exception("Rotation must be 0, 90, 180, or 270")
+        }
     }
 }

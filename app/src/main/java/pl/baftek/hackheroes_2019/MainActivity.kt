@@ -4,30 +4,56 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Matrix
 import android.os.Bundle
+import android.util.Log
 import android.util.Rational
 import android.util.Size
 import android.view.Surface
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.firebase.ml.vision.FirebaseVision
+import com.google.firebase.ml.vision.common.FirebaseVisionImage
+import com.google.firebase.ml.vision.label.FirebaseVisionCloudImageLabelerOptions
 import kotlinx.android.synthetic.main.activity_main.*
+import java.math.RoundingMode
 
-
+private const val TAG = "MainActivity"
 private const val REQUEST_CODE_CAMERA_PERMISSION = 10
+
+// Camera related config
 private const val WIDTH = 740
 private const val HEIGHT = 740
+private const val ROTATION = Surface.ROTATION_0
+
+private val RESOULTION = Size(WIDTH, HEIGHT)
+private val ASPECT_RATIO = Rational(1, 1)
 
 class MainActivity : AppCompatActivity() {
 
     private val analyzer: ImageAnalyzer = ImageAnalyzer()
 
+    private lateinit var analysis: ImageAnalysis
+    private lateinit var adapter: ArrayAdapter<String>
+
+    private val labelerOptions = FirebaseVisionCloudImageLabelerOptions.Builder()
+        .setConfidenceThreshold(0.7f)
+        .build()
+
+    private val labeler = FirebaseVision.getInstance().getCloudImageLabeler(labelerOptions)
+
+    private val results: MutableList<String> = mutableListOf()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, results)
+        listResults.adapter = adapter
 
         // Request camera permissions
         if (isCameraAccessGranted()) {
@@ -77,10 +103,10 @@ class MainActivity : AppCompatActivity() {
 
         // Create configuration object for the viewfinder use case
         fun initPreview(): Preview {
-            val previewConfig = PreviewConfig.Builder().apply {
-                setTargetAspectRatio(Rational(1, 1))
-                setTargetResolution(Size(WIDTH, HEIGHT))
-            }.build()
+            val previewConfig = PreviewConfig.Builder()
+                .setTargetAspectRatio(ASPECT_RATIO)
+                .setTargetResolution(RESOULTION)
+                .build()
 
             val preview = Preview(previewConfig)
 
@@ -101,9 +127,9 @@ class MainActivity : AppCompatActivity() {
 
         fun initCapture(): ImageCapture {
             val captureConfig = ImageCaptureConfig.Builder()
-                .setTargetAspectRatio(Rational(16, 9))
-                .setTargetRotation(Surface.ROTATION_0)
-                .setTargetResolution(Size(WIDTH, HEIGHT))
+                .setTargetAspectRatio(ASPECT_RATIO)
+                .setTargetRotation(ROTATION)
+                .setTargetResolution(RESOULTION)
                 .setFlashMode(FlashMode.AUTO)
                 .setCaptureMode(ImageCapture.CaptureMode.MIN_LATENCY)
                 .build()
@@ -111,12 +137,12 @@ class MainActivity : AppCompatActivity() {
             val capture = ImageCapture(captureConfig)
 
             buttonShutter.setOnClickListener {
-
                 capture.takePicture(object : ImageCapture.OnImageCapturedListener() {
                     override fun onCaptureSuccess(image: ImageProxy?, rotationDegrees: Int) {
-                        analyzer.analyze(image, rotationDegrees)
 
-                        super.onCaptureSuccess(image, rotationDegrees)
+                        analysis.analyzer?.analyze(image, rotationDegrees)
+
+                        image?.close()
                     }
 
                     override fun onError(
@@ -124,23 +150,70 @@ class MainActivity : AppCompatActivity() {
                         message: String,
                         cause: Throwable?
                     ) {
-                        super.onError(imageCaptureError, message, cause)
-                        Toast.makeText(this@MainActivity, "error while taking picture", LENGTH_SHORT).show()
+                        val log = "Image capture failed"
+                        Log.w(TAG, log)
+                        Toast.makeText(this@MainActivity, log, LENGTH_SHORT).show()
                     }
+
                 })
             }
+
             return capture
         }
 
+        fun initAnalysis(): ImageAnalysis {
+            val analysisConfig = ImageAnalysisConfig.Builder()
+                .setTargetAspectRatio(ASPECT_RATIO)
+                .setTargetRotation(ROTATION)
+                .setTargetResolution(RESOULTION)
+                .setImageQueueDepth(1)
+                .setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
+                .build()
+
+            val analysis = ImageAnalysis(analysisConfig)
+            analysis.setAnalyzer { image: ImageProxy?, rotationDegrees: Int ->
+                val mediaImage = image?.image ?: return@setAnalyzer
+                val imageRotation = ImageAnalyzer.degreesToFirebaseRotation(rotationDegrees)
+
+                val visionImage = FirebaseVisionImage.fromMediaImage(mediaImage, imageRotation)
+
+
+                labeler.processImage(visionImage)
+                    .addOnSuccessListener { labels ->
+                        results.clear()
+
+                        labels.forEach {
+                            val resultDebug =
+                                "text: ${it.text}, entityId: ${it.entityId}, confidence: ${it.confidence}"
+                            val result = "${it.text}, ${it.confidence.toBigDecimal().setScale(
+                                2,
+                                RoundingMode.UP
+                            ).toDouble() * 100} %"
+
+                            Log.d(TAG, resultDebug)
+                            results.add(result)
+                        }
+
+                        adapter.notifyDataSetChanged()
+                    }
+                    .addOnFailureListener { exception -> exception.printStackTrace() }
+            }
+
+            return analysis
+        }
+
+
         val preview = initPreview()
         val capture = initCapture()
+        analysis = initAnalysis()
 
         // Bind use cases to lifecycle
         CameraX.bindToLifecycle(this, preview)
         CameraX.bindToLifecycle(this, capture)
+        // CameraX.bindToLifecycle(this, analysis)
     }
 
-    fun updateTransform() {
+    private fun updateTransform() {
         val matrix = Matrix()
 
         // Compute the center of the view finder
