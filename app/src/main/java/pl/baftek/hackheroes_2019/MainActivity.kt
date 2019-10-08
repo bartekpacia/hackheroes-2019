@@ -11,17 +11,19 @@ import android.view.ViewGroup
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.CameraX
-import androidx.camera.core.Preview
-import androidx.camera.core.PreviewConfig
+import androidx.camera.core.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_main.*
 
 
 private const val REQUEST_CODE_CAMERA_PERMISSION = 10
+private const val WIDTH = 740
+private const val HEIGHT = 740
 
 class MainActivity : AppCompatActivity() {
+
+    private val analyzer: ImageAnalyzer = ImageAnalyzer()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,28 +77,56 @@ class MainActivity : AppCompatActivity() {
         // Create configuration object for the viewfinder use case
         val previewConfig = PreviewConfig.Builder().apply {
             setTargetAspectRatio(Rational(1, 1))
-            setTargetResolution(Size(740, 740))
+            setTargetResolution(Size(WIDTH, HEIGHT))
         }.build()
 
         val preview = Preview(previewConfig)
 
         // Every time the viewfinder is updated, recompute layout
-        preview.setOnPreviewOutputUpdateListener {
+        preview.setOnPreviewOutputUpdateListener { previewOutput: Preview.PreviewOutput ->
 
             // To update the SurfaceTexture, we have to remove it and re-add it
             val parent = viewfinder.parent as ViewGroup
             parent.removeView(viewfinder)
             parent.addView(viewfinder, 0)
 
-            viewfinder.surfaceTexture = it.surfaceTexture
+            viewfinder.surfaceTexture = previewOutput.surfaceTexture
             updateTransform()
         }
 
+        val captureConfig = ImageCaptureConfig.Builder()
+            .setTargetAspectRatio(Rational(16, 9))
+            .setTargetRotation(Surface.ROTATION_0)
+            .setTargetResolution(Size(WIDTH, HEIGHT))
+            .setFlashMode(FlashMode.AUTO)
+            .setCaptureMode(ImageCapture.CaptureMode.MIN_LATENCY)
+            .build()
+
+        val capture = ImageCapture(captureConfig)
+
+        buttonShutter.setOnClickListener {
+
+            capture.takePicture(object : ImageCapture.OnImageCapturedListener() {
+                override fun onCaptureSuccess(image: ImageProxy?, rotationDegrees: Int) {
+                    analyzer.analyze(image, rotationDegrees)
+
+                    super.onCaptureSuccess(image, rotationDegrees)
+                }
+
+                override fun onError(
+                    imageCaptureError: ImageCapture.ImageCaptureError,
+                    message: String,
+                    cause: Throwable?
+                ) {
+                    super.onError(imageCaptureError, message, cause)
+                    Toast.makeText(this@MainActivity, "error while taking picture", LENGTH_SHORT).show()
+                }
+            })
+        }
+
         // Bind use cases to lifecycle
-        // If Android Studio complains about "this" being not a LifecycleOwner
-        // try rebuilding the project or updating the appcompat dependency to
-        // version 1.1.0 or higher.
         CameraX.bindToLifecycle(this, preview)
+        CameraX.bindToLifecycle(this, capture)
     }
 
     private fun updateTransform() {
