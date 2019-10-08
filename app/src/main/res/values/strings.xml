@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">EcoScanner</string>
+    <string name="app_name">EkoSkaner</string>
+    <string name="scan">Skanuj</string>
 </resources>
