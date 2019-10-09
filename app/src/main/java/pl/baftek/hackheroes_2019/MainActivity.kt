@@ -45,12 +45,14 @@ class MainActivity : AppCompatActivity() {
         adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, viewModel.results.value!!)
         listResults.adapter = adapter
 
+        
         // Request camera permissions
-        if (isCameraAccessGranted()) {
-            viewfinder.post { startCamera() }
-        } else {
+        if (isCameraAccessGranted()) viewfinder.post { startCamera() }
+        else {
             ActivityCompat.requestPermissions(
-                this, arrayOf(Manifest.permission.CAMERA), REQUEST_CODE_CAMERA_PERMISSION
+                this,
+                arrayOf(Manifest.permission.CAMERA),
+                REQUEST_CODE_CAMERA_PERMISSION
             )
         }
 
@@ -71,18 +73,12 @@ class MainActivity : AppCompatActivity() {
      * Process result from permission request dialog box, has the request
      * been granted? If yes, start Camera. Otherwise display a toast
      */
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<String>, grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         if (requestCode == REQUEST_CODE_CAMERA_PERMISSION) {
             if (isCameraAccessGranted()) {
                 viewfinder.post { startCamera() }
             } else {
-                Toast.makeText(
-                    this,
-                    "Permissions not granted by the user.",
-                    LENGTH_SHORT
-                ).show()
+                Toast.makeText(this, "permissions error.", LENGTH_SHORT).show()
             }
         }
     }
