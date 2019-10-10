@@ -12,8 +12,6 @@ import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ImageAnalysisConfig
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageProxy
 import androidx.core.app.ActivityCompat
@@ -64,6 +62,28 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun startCamera() {
+        buttonShutter.setOnClickListener {
+            cameraView.takePicture(object : ImageCapture.OnImageCapturedListener() {
+                override fun onCaptureSuccess(image: ImageProxy?, rotationDegrees: Int) {
+                    viewModel.analyzeImage(image, rotationDegrees)
+
+                    image?.close()
+                }
+
+                override fun onError(
+                    imageCaptureError: ImageCapture.ImageCaptureError,
+                    message: String,
+                    cause: Throwable?
+                ) {
+                    val log = "Image capture failed"
+                    Log.w(TAG, log)
+                    Toast.makeText(this@MainActivity, log, LENGTH_SHORT).show()
+                }
+            })
+        }
+    }
+
     /**
      * Process result from permission request dialog box, has the request
      * been granted? If yes, start Camera. Otherwise display a toast
@@ -84,42 +104,5 @@ class MainActivity : AppCompatActivity() {
     private fun isCameraAccessGranted(): Boolean {
         return ContextCompat
             .checkSelfPermission(baseContext, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun startCamera() {
-        val analysisConfig = ImageAnalysisConfig.Builder()
-            .setTargetAspectRatio(ASPECT_RATIO)
-            .setTargetRotation(ROTATION)
-            .setTargetResolution(RESOULTION)
-            .setImageQueueDepth(1)
-            .setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
-            .build()
-
-        val analysis = ImageAnalysis(analysisConfig)
-
-        analysis.analyzer = ImageAnalysis.Analyzer { image, rotation ->
-            viewModel.analyzeImage(image, rotation)
-
-        }
-
-        buttonShutter.setOnClickListener {
-            cameraView.takePicture(object : ImageCapture.OnImageCapturedListener() {
-                override fun onCaptureSuccess(image: ImageProxy?, rotationDegrees: Int) {
-                    analysis.analyzer?.analyze(image, rotationDegrees)
-
-                    image?.close()
-                }
-
-                override fun onError(
-                    imageCaptureError: ImageCapture.ImageCaptureError,
-                    message: String,
-                    cause: Throwable?
-                ) {
-                    val log = "Image capture failed"
-                    Log.w(TAG, log)
-                    Toast.makeText(this@MainActivity, log, LENGTH_SHORT).show()
-                }
-            })
-        }
     }
 }
