@@ -2,19 +2,20 @@ package pl.baftek.hackheroes_2019
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.graphics.Matrix
 import android.os.Bundle
 import android.util.Log
 import android.util.Rational
 import android.util.Size
 import android.view.Surface
-import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.*
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageAnalysisConfig
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageProxy
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.observe
@@ -33,7 +34,6 @@ private val ASPECT_RATIO = Rational(16, 9)
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var analysis: ImageAnalysis
     private lateinit var adapter: ArrayAdapter<String>
 
     private val viewModel: MainActivityViewModel by viewModels()
@@ -45,9 +45,8 @@ class MainActivity : AppCompatActivity() {
         adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, viewModel.results.value!!)
         listResults.adapter = adapter
 
-        
         // Request camera permissions
-        if (isCameraAccessGranted()) viewfinder.post { startCamera() }
+        if (isCameraAccessGranted()) cameraView.post { startCamera() }
         else {
             ActivityCompat.requestPermissions(
                 this,
@@ -56,11 +55,7 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-
-        // Every time the provided texture view changes, recompute layout
-        viewfinder.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            updateTransform()
-        }
+        cameraView.bindToLifecycle(this)
 
         viewModel.results.observe(this) { results: MutableList<String> ->
             listResults.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, results)
@@ -76,7 +71,7 @@ class MainActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         if (requestCode == REQUEST_CODE_CAMERA_PERMISSION) {
             if (isCameraAccessGranted()) {
-                viewfinder.post { startCamera() }
+                cameraView.post { startCamera() }
             } else {
                 Toast.makeText(this, "permissions error.", LENGTH_SHORT).show()
             }
@@ -92,112 +87,39 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startCamera() {
+        val analysisConfig = ImageAnalysisConfig.Builder()
+            .setTargetAspectRatio(ASPECT_RATIO)
+            .setTargetRotation(ROTATION)
+            .setTargetResolution(RESOULTION)
+            .setImageQueueDepth(1)
+            .setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
+            .build()
 
-        // Create configuration object for the viewfinder use case
-        fun initPreview(): Preview {
-            val previewConfig = PreviewConfig.Builder()
-                .setTargetAspectRatio(ASPECT_RATIO)
-                .setTargetResolution(RESOULTION)
-                .build()
+        val analysis = ImageAnalysis(analysisConfig)
 
-            val preview = Preview(previewConfig)
-
-            // Every time the viewfinder is updated, recompute layout
-            preview.setOnPreviewOutputUpdateListener { previewOutput: Preview.PreviewOutput ->
-
-                // To update the SurfaceTexture, we have to remove it and re-add it
-                val parent = viewfinder.parent as ViewGroup
-                parent.removeView(viewfinder)
-                parent.addView(viewfinder, 0)
-
-                viewfinder.surfaceTexture = previewOutput.surfaceTexture
-                updateTransform()
-            }
-
-            return preview
+        analysis.analyzer = ImageAnalysis.Analyzer { image, rotation ->
+            viewModel.analyzeImage(image, rotation)
+            
         }
 
-        fun initCapture(): ImageCapture {
-            val captureConfig = ImageCaptureConfig.Builder()
-                .setTargetAspectRatio(ASPECT_RATIO)
-                .setTargetRotation(ROTATION)
-                .setTargetResolution(RESOULTION)
-                .setFlashMode(FlashMode.AUTO)
-                .setCaptureMode(ImageCapture.CaptureMode.MIN_LATENCY)
-                .build()
+        buttonShutter.setOnClickListener {
+            cameraView.takePicture(object : ImageCapture.OnImageCapturedListener() {
+                override fun onCaptureSuccess(image: ImageProxy?, rotationDegrees: Int) {
+                    analysis.analyzer?.analyze(image, rotationDegrees)
 
-            val capture = ImageCapture(captureConfig)
+                    image?.close()
+                }
 
-            buttonShutter.setOnClickListener {
-                capture.takePicture(object : ImageCapture.OnImageCapturedListener() {
-                    override fun onCaptureSuccess(image: ImageProxy?, rotationDegrees: Int) {
-
-                        analysis.analyzer?.analyze(image, rotationDegrees)
-
-                        image?.close()
-                    }
-
-                    override fun onError(
-                        imageCaptureError: ImageCapture.ImageCaptureError,
-                        message: String,
-                        cause: Throwable?
-                    ) {
-                        val log = "Image capture failed"
-                        Log.w(TAG, log)
-                        Toast.makeText(this@MainActivity, log, LENGTH_SHORT).show()
-                    }
-
-                })
-            }
-
-            return capture
+                override fun onError(
+                    imageCaptureError: ImageCapture.ImageCaptureError,
+                    message: String,
+                    cause: Throwable?
+                ) {
+                    val log = "Image capture failed"
+                    Log.w(TAG, log)
+                    Toast.makeText(this@MainActivity, log, LENGTH_SHORT).show()
+                }
+            })
         }
-
-        fun initAnalysis(): ImageAnalysis {
-            val analysisConfig = ImageAnalysisConfig.Builder()
-                .setTargetAspectRatio(ASPECT_RATIO)
-                .setTargetRotation(ROTATION)
-                .setTargetResolution(RESOULTION)
-                .setImageQueueDepth(1)
-                .setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
-                .build()
-
-            val analysis = ImageAnalysis(analysisConfig)
-            analysis.setAnalyzer { image: ImageProxy?, rotationDegrees: Int ->
-                viewModel.analyzeImage(image, rotationDegrees)
-            }
-
-            return analysis
-        }
-
-
-        val preview = initPreview()
-        val capture = initCapture()
-        analysis = initAnalysis()
-
-        CameraX.bindToLifecycle(this, preview)
-        CameraX.bindToLifecycle(this, capture)
-        // CameraX.bindToLifecycle(this, analysis) // It throttles the device heavily
-    }
-
-    private fun updateTransform() {
-        val matrix = Matrix()
-
-        // Compute the center of the view finder
-        val centerX = viewfinder.width / 2f
-        val centerY = viewfinder.height / 2f
-
-        // Correct preview output to account for display rotation
-        val rotationDegrees = when (viewfinder.display.rotation) {
-            Surface.ROTATION_0 -> 0
-            Surface.ROTATION_90 -> 90
-            Surface.ROTATION_180 -> 180
-            Surface.ROTATION_270 -> 270
-            else -> return
-        }
-        matrix.postRotate(-rotationDegrees.toFloat(), centerX, centerY)
-
-        // Finally, apply transformations to our TextureView
-        viewfinder.setTransform(matrix)
     }
 }
