@@ -1,13 +1,10 @@
 package pl.baftek.hackheroes_2019
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
-import android.util.Rational
-import android.util.Size
-import android.view.Surface
-import android.widget.ArrayAdapter
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import androidx.activity.viewModels
@@ -22,26 +19,14 @@ import kotlinx.android.synthetic.main.activity_main.*
 private const val TAG = "MainActivity"
 private const val REQUEST_CODE_CAMERA_PERMISSION = 10
 
-// Camera related config
-private const val WIDTH = 720
-private const val HEIGHT = 1280
-private const val ROTATION = Surface.ROTATION_0
-
-private val RESOULTION = Size(WIDTH, HEIGHT)
-private val ASPECT_RATIO = Rational(16, 9)
-
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var adapter: ArrayAdapter<String>
 
     private val viewModel: MainActivityViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, viewModel.results.value!!)
-        // listResults.adapter = adapter
 
         // Request camera permissions
         if (isCameraAccessGranted()) cameraView.post { startCamera() }
@@ -55,9 +40,13 @@ class MainActivity : AppCompatActivity() {
 
         cameraView.bindToLifecycle(this)
 
-        viewModel.results.observe(this) { results: MutableList<String> ->
-            //listResults.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, results)
-            // listResults.invalidate()
+        viewModel.results.observe(this) { results: MutableList<String>? ->
+            if (results != null) {
+                val intent = Intent(this, ResultsActivity::class.java)
+                intent.putExtra("results", results.toTypedArray())
+
+                startActivity(intent)
+            }
             Toast.makeText(this, "new results!", LENGTH_SHORT).show()
         }
     }
