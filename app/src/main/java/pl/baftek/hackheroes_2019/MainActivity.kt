@@ -40,14 +40,13 @@ class MainActivity : AppCompatActivity() {
 
         cameraView.bindToLifecycle(this)
 
-        viewModel.results.observe(this) { results: MutableList<String>? ->
-            if (results != null) {
+        viewModel.results.observe(this) { results: MutableList<String> ->
+            if (results.size > 0) {
                 val intent = Intent(this, ResultsActivity::class.java)
                 intent.putExtra("results", results.toTypedArray())
 
                 startActivity(intent)
-            }
-            Toast.makeText(this, "new results!", LENGTH_SHORT).show()
+            } else Toast.makeText(this, "no results!", LENGTH_SHORT).show()
         }
     }
 
