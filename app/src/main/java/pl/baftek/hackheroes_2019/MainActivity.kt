@@ -5,6 +5,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.view.View.INVISIBLE
+import android.view.View.VISIBLE
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import androidx.activity.viewModels
@@ -38,9 +40,9 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        cameraView.bindToLifecycle(this)
-
         viewModel.results.observe(this) { results: MutableList<String> ->
+            progressBar.visibility = INVISIBLE
+
             if (results.size > 0) {
                 val intent = Intent(this, ResultsActivity::class.java)
                 intent.putExtra("results", results.toTypedArray())
@@ -51,10 +53,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startCamera() {
+        cameraView.bindToLifecycle(this)
+        
         buttonShutter.setOnClickListener {
             cameraView.takePicture(object : ImageCapture.OnImageCapturedListener() {
                 override fun onCaptureSuccess(image: ImageProxy?, rotationDegrees: Int) {
                     viewModel.analyzeImage(image, rotationDegrees)
+
+
+                    progressBar.visibility = VISIBLE
 
                     image?.close()
                 }
