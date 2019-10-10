@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, viewModel.results.value!!)
-        listResults.adapter = adapter
+        // listResults.adapter = adapter
 
         // Request camera permissions
         if (isCameraAccessGranted()) cameraView.post { startCamera() }
@@ -58,8 +58,8 @@ class MainActivity : AppCompatActivity() {
         cameraView.bindToLifecycle(this)
 
         viewModel.results.observe(this) { results: MutableList<String> ->
-            listResults.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, results)
-            listResults.invalidate()
+            //listResults.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, results)
+            // listResults.invalidate()
             Toast.makeText(this, "new results!", LENGTH_SHORT).show()
         }
     }
@@ -99,7 +99,7 @@ class MainActivity : AppCompatActivity() {
 
         analysis.analyzer = ImageAnalysis.Analyzer { image, rotation ->
             viewModel.analyzeImage(image, rotation)
-            
+
         }
 
         buttonShutter.setOnClickListener {
