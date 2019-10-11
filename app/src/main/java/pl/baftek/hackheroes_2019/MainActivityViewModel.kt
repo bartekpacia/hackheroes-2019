@@ -9,10 +9,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
+import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
 import com.google.firebase.ml.vision.label.FirebaseVisionCloudImageLabelerOptions
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.math.RoundingMode
 
 private const val TAG = "MainActivityVM"
 
@@ -24,8 +24,8 @@ class MainActivityViewModel : ViewModel() {
 
     private val labeler = FirebaseVision.getInstance().getCloudImageLabeler(labelerOptions)
 
-    private val _results: MutableLiveData<MutableList<String>> = MutableLiveData()
-    val results: LiveData<MutableList<String>>
+    private val _results: MutableLiveData<MutableList<VisionLabel>> = MutableLiveData()
+    val results: LiveData<MutableList<VisionLabel>>
         get() = _results
 
     init {
@@ -34,7 +34,7 @@ class MainActivityViewModel : ViewModel() {
 
     fun analyzeImage(img: ImageProxy?, rotation: Int) = viewModelScope.launch {
         val mediaImage: Image = img!!.image!!
-        val imageRotation = ImageAnalyzer.degreesToFirebaseRotation(rotation)
+        val imageRotation = degreesToFirebaseRotation(rotation)
 
         val visionImage = FirebaseVisionImage.fromMediaImage(mediaImage, imageRotation)
 
@@ -43,17 +43,22 @@ class MainActivityViewModel : ViewModel() {
 
         _results.value?.clear()
         visionImageLabels.forEach {
-            val confidence = "${it.confidence.toBigDecimal().setScale(2, RoundingMode.UP).toDouble() * 100} %"
+            val visionLabel = VisionLabel(it.text, it.confidence, it.entityId)
 
-            val result = "${it.text}, $confidence"
-            val resultDebug = "$result entityId: ${it.entityId}"
-
-            Log.d(TAG, resultDebug)
-            _results.value?.add(result)
+            Log.d(TAG, visionLabel.toString())
+            _results.value?.add(visionLabel)
         }
 
         // Notify observers
         _results.value = _results.value
 
+    }
+
+    private fun degreesToFirebaseRotation(rotationDegrees: Int): Int = when (rotationDegrees) {
+        0 -> FirebaseVisionImageMetadata.ROTATION_0
+        90 -> FirebaseVisionImageMetadata.ROTATION_90
+        180 -> FirebaseVisionImageMetadata.ROTATION_180
+        270 -> FirebaseVisionImageMetadata.ROTATION_270
+        else -> throw Exception("Rotation must be 0, 90, 180, or 270")
     }
 }

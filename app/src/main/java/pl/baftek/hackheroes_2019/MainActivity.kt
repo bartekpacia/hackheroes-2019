@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        viewModel.results.observe(this) { results: MutableList<String> ->
+        viewModel.results.observe(this) { results: MutableList<VisionLabel> ->
             progressBar.visibility = INVISIBLE
 
             if (results.size > 0) {
