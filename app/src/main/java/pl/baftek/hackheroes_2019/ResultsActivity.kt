@@ -15,10 +15,13 @@ class ResultsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_results)
 
-        val results = intent?.getStringArrayExtra("results")
+        val results = intent?.getParcelableArrayListExtra<VisionLabel>("results")
 
         if (results != null) {
-            adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, results)
+            adapter = ArrayAdapter(
+                this,
+                android.R.layout.simple_list_item_1,
+                results.map { visionLabel -> visionLabel.text })
             listResults.adapter = adapter
         } else {
             Toast.makeText(this, "results null", LENGTH_SHORT).show()

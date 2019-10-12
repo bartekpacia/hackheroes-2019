@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
 
             if (results.size > 0) {
                 val intent = Intent(this, ResultsActivity::class.java)
-                intent.putExtra("results", results.toTypedArray())
+                intent.putParcelableArrayListExtra("results", ArrayList(results.toList()))
 
                 startActivity(intent)
             } else Toast.makeText(this, "no results!", LENGTH_SHORT).show()
