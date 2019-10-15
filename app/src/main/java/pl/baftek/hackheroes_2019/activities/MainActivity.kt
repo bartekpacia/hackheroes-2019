@@ -1,4 +1,4 @@
-package pl.baftek.hackheroes_2019
+package pl.baftek.hackheroes_2019.activities
 
 import android.Manifest
 import android.content.Intent
@@ -17,6 +17,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.observe
 import kotlinx.android.synthetic.main.activity_main.*
+import pl.baftek.hackheroes_2019.R
+import pl.baftek.hackheroes_2019.data.VisionLabel
 
 private const val TAG = "MainActivity"
 private const val REQUEST_CODE_CAMERA_PERMISSION = 10

@@ -17,7 +17,7 @@
             android:value="label" />
 
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.MainActivity"
             android:theme="@style/AppTheme.TransparentActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,7 +26,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".ResultsActivity" />
+        <activity android:name=".activities.ResultsActivity" />
     </application>
 
 </manifest>

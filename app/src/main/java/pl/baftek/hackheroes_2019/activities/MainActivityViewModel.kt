@@ -1,4 +1,4 @@
-package pl.baftek.hackheroes_2019
+package pl.baftek.hackheroes_2019.activities
 
 import android.media.Image
 import android.util.Log
@@ -13,6 +13,7 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
 import com.google.firebase.ml.vision.label.FirebaseVisionCloudImageLabelerOptions
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import pl.baftek.hackheroes_2019.data.VisionLabel
 
 private const val TAG = "MainActivityVM"
 
