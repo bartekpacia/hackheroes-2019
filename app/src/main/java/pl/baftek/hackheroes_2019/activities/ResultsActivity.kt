@@ -1,20 +1,24 @@
 package pl.baftek.hackheroes_2019.activities
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.activity_results.*
 import pl.baftek.hackheroes_2019.R
 import pl.baftek.hackheroes_2019.data.Material
 import pl.baftek.hackheroes_2019.data.VisionLabel
 import pl.baftek.hackheroes_2019.data.VisionLabelTagged
 
+private const val TAG = "ResultsActivity"
+
 class ResultsActivity : AppCompatActivity() {
 
     private val plasticRegex = Regex("Plastic bottle|Water bottle|Water|Bottle")
     private val paperRegex = Regex("Paper|Cardboard|Text|Notebook|Drawing|Paper product|") // TODO
-    private val glassRefex = Regex("Glass bottle")
+    private val glassRegex = Regex("Glass bottle")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +48,10 @@ class ResultsActivity : AppCompatActivity() {
                 material = Material.PAPER
             }
 
+            if (glassRegex.containsMatchIn(result.text)) {
+                material = Material.GLASS
+            }
+
             result.text = "${result.text} ${result.confidence} (regex)"
 
             val match = VisionLabelTagged(result.text, result.confidence, result.entityId, material)
@@ -52,10 +60,19 @@ class ResultsActivity : AppCompatActivity() {
 
         if (matches.isNotEmpty()) {
             val bestMatch = matches.maxBy { it.confidence } ?: return
+
+            
+            matches.forEach {
+                Log.d(TAG, it.toString())
+            }
+            Log.d(TAG, "Best match" + bestMatch)
+
             Toast.makeText(this, bestMatch.text, LENGTH_SHORT).show()
 
             textMaterialType.text = bestMatch.material.type
             textDecayTime.text = "Czas rozkładu: " + bestMatch.material.decayTime
+
+            Glide.with(this).load(bestMatch.material.image).into(imageRecycleBin)
         }
     }
 }
