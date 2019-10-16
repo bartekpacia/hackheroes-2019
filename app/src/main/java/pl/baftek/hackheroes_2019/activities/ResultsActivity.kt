@@ -13,7 +13,8 @@ import pl.baftek.hackheroes_2019.data.VisionLabelTagged
 class ResultsActivity : AppCompatActivity() {
 
     private val plasticRegex = Regex("Plastic bottle|Water bottle|Water|Bottle")
-    private val paperRegex = Regex("Paper|Cardboard") // TODO
+    private val paperRegex = Regex("Paper|Cardboard|Text|Notebook|Drawing|Paper product|") // TODO
+    private val glassRefex = Regex("Glass bottle")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
