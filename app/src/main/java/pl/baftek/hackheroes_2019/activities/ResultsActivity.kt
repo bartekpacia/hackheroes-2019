@@ -34,6 +34,26 @@ class ResultsActivity : AppCompatActivity() {
 
         val matches: ArrayList<VisionLabelTagged> = arrayListOf()
 
+        fun tag(results: List<VisionLabel>): VisionLabelTagged? {
+            for (result in results) {
+                var plastic = plasticRegex.findAll(result.text, 0).toList().size
+                var paper = paperRegex.findAll(result.text, 0).toList().size
+                var glass = glassRegex.findAll(result.text, 0).toList().size
+
+                Log.d(TAG, "plastic: $plastic, paper: $paper, glass: $glass")
+            }
+
+            /*
+            result.text = "${result.text} ${result.confidence} (regex)"
+            val match = VisionLabelTagged(result.text, result.confidence, result.entityId, material)
+            matches.add(match)
+             */
+
+            return null
+        }
+
+        tag(results)
+
         for (result in results) {
 
             var material: Material = Material.UNKNOWN
@@ -61,7 +81,7 @@ class ResultsActivity : AppCompatActivity() {
         if (matches.isNotEmpty()) {
             val bestMatch = matches.maxBy { it.confidence } ?: return
 
-            
+
             matches.forEach {
                 Log.d(TAG, it.toString())
             }
