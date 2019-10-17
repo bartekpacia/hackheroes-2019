@@ -17,7 +17,7 @@ private const val TAG = "ResultsActivity"
 class ResultsActivity : AppCompatActivity() {
 
     private val plasticRegex = Regex("Plastic bottle|Water bottle|Water|Bottle")
-    private val paperRegex = Regex("Paper|Cardboard|Text|Notebook|Drawing|Paper product|") // TODO
+    private val paperRegex = Regex("Paper") // TODO
     private val glassRegex = Regex("Glass bottle")
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,26 +33,6 @@ class ResultsActivity : AppCompatActivity() {
 
 
         val matches: ArrayList<VisionLabelTagged> = arrayListOf()
-
-        fun tag(results: List<VisionLabel>): VisionLabelTagged? {
-            for (result in results) {
-                var plastic = plasticRegex.findAll(result.text, 0).toList().size
-                var paper = paperRegex.findAll(result.text, 0).toList().size
-                var glass = glassRegex.findAll(result.text, 0).toList().size
-
-                Log.d(TAG, "plastic: $plastic, paper: $paper, glass: $glass")
-            }
-
-            /*
-            result.text = "${result.text} ${result.confidence} (regex)"
-            val match = VisionLabelTagged(result.text, result.confidence, result.entityId, material)
-            matches.add(match)
-             */
-
-            return null
-        }
-
-        tag(results)
 
         for (result in results) {
 
