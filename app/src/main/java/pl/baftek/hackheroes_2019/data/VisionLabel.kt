@@ -5,7 +5,7 @@ import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 data class VisionLabel(
-    var text: String,
+    val text: String,
     val confidence: Float,
     val entityId: String?
 ) : Parcelable

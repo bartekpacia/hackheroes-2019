@@ -5,6 +5,7 @@ import android.util.Log
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.activity_results.*
 import pl.baftek.hackheroes_2019.R
@@ -72,6 +73,7 @@ class ResultsActivity : AppCompatActivity() {
 
 
         textMaterialType.text = material.type
+        textMaterialType.setTextColor(ContextCompat.getColor(this, material.color))
         textDecayTime.text = "Czas rozkładu: " + material.decayTime
 
         Glide.with(this).load(material.image).into(imageRecycleBin)
