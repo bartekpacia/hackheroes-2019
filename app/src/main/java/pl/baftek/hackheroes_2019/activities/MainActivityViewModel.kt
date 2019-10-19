@@ -20,7 +20,7 @@ private const val TAG = "MainActivityVM"
 class MainActivityViewModel : ViewModel() {
 
     private val labelerOptions = FirebaseVisionCloudImageLabelerOptions.Builder()
-        .setConfidenceThreshold(0.6f)
+        .setConfidenceThreshold(0.75f)
         .build()
 
     private val labeler = FirebaseVision.getInstance().getCloudImageLabeler(labelerOptions)

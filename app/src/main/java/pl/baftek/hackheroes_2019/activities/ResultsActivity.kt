@@ -10,15 +10,18 @@ import kotlinx.android.synthetic.main.activity_results.*
 import pl.baftek.hackheroes_2019.R
 import pl.baftek.hackheroes_2019.data.Material
 import pl.baftek.hackheroes_2019.data.VisionLabel
-import pl.baftek.hackheroes_2019.data.VisionLabelTagged
 
 private const val TAG = "ResultsActivity"
 
+// Jeśli istnieje konkurs na najdurniejszy sposób działania
+// Wygrałem
+
 class ResultsActivity : AppCompatActivity() {
 
-    private val plasticRegex = Regex("Plastic bottle|Water bottle|Water|Bottle")
-    private val paperRegex = Regex("Paper|Cardboard|Text|Notebook|Drawing|Paper product|") // TODO
-    private val glassRegex = Regex("Glass bottle")
+    private val plasticRegex: Array<String> = arrayOf("Plastic bottle", "Water bottle", "Water", "Bottle")
+    private val paperRegex: Array<String> =
+        arrayOf("Paper", "Cardboard", "Text", "Notebook", "Drawing", "Paper product")
+    private val glassRegex: Array<String> = arrayOf("Glass bottle")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,48 +34,46 @@ class ResultsActivity : AppCompatActivity() {
             return
         }
 
+        var plastics = 0
+        var papers = 0
+        var glasses = 0
 
-        val matches: ArrayList<VisionLabelTagged> = arrayListOf()
-
-        for (result in results) {
-
-            var material: Material = Material.UNKNOWN
-
-            // Plastic
-            if (plasticRegex.containsMatchIn(result.text)) {
-                material = Material.PLASTIC
+        plasticRegex.forEach { regex ->
+            results.forEach {
+                if (it.text.contains(Regex(regex))) {
+                    plastics++
+                }
             }
-
-            // Paper
-            if (paperRegex.containsMatchIn(result.text)) {
-                material = Material.PAPER
-            }
-
-            if (glassRegex.containsMatchIn(result.text)) {
-                material = Material.GLASS
-            }
-
-            result.text = "${result.text} ${result.confidence} (regex)"
-
-            val match = VisionLabelTagged(result.text, result.confidence, result.entityId, material)
-            matches.add(match)
         }
 
-        if (matches.isNotEmpty()) {
-            val bestMatch = matches.maxBy { it.confidence } ?: return
-
-            
-            matches.forEach {
-                Log.d(TAG, it.toString())
+        paperRegex.forEach { regex ->
+            results.forEach {
+                if (it.text.contains(Regex(regex))) {
+                    papers++
+                }
             }
-            Log.d(TAG, "Best match" + bestMatch)
-
-            Toast.makeText(this, bestMatch.text, LENGTH_SHORT).show()
-
-            textMaterialType.text = bestMatch.material.type
-            textDecayTime.text = "Czas rozkładu: " + bestMatch.material.decayTime
-
-            Glide.with(this).load(bestMatch.material.image).into(imageRecycleBin)
         }
+
+        glassRegex.forEach { regex ->
+            results.forEach {
+                if (it.text.contains(Regex(regex))) {
+                    glasses++
+                }
+            }
+        }
+
+        var material: Material = Material.UNKNOWN
+
+        if (plastics > papers && plastics > glasses) material = Material.PLASTIC
+        if (papers > plastics && papers > glasses) material = Material.PAPER
+        if (glasses > plastics && glasses > papers) material = Material.GLASS
+
+        Log.d(TAG, "plastics: $plastics papers: $papers")
+
+
+        textMaterialType.text = material.type
+        textDecayTime.text = "Czas rozkładu: " + material.decayTime
+
+        Glide.with(this).load(material.image).into(imageRecycleBin)
     }
 }

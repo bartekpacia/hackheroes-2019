@@ -5,6 +5,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
 import android.widget.Toast
@@ -51,6 +53,21 @@ class MainActivity : AppCompatActivity() {
                 startActivity(intent)
             } else Toast.makeText(this, "no results!", LENGTH_SHORT).show()
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+        when (item.itemId) {
+            R.id.main_menu -> Toast.makeText(this, "pomoc", LENGTH_SHORT).show()
+        }
+
+        return super.onOptionsItemSelected(item)
     }
 
     private fun startCamera() {
