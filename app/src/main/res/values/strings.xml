@@ -2,4 +2,5 @@
     <string name="app_name">EkoSkaner</string>
     <string name="scan">Skanuj</string>
     <string name="app_bar_action">Pomoc</string>
+    <string name="help_placeholder">Przykładowa informacja nt. segragacji odpadów</string>
 </resources>

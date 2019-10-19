@@ -19,6 +19,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.observe
 import kotlinx.android.synthetic.main.activity_main.*
+import pl.baftek.hackheroes_2019.HelpActivity
 import pl.baftek.hackheroes_2019.R
 import pl.baftek.hackheroes_2019.data.VisionLabel
 
@@ -64,7 +65,7 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
         when (item.itemId) {
-            R.id.main_menu -> Toast.makeText(this, "pomoc", LENGTH_SHORT).show()
+            R.id.main_menu -> startActivity(Intent(this, HelpActivity::class.java))
         }
 
         return super.onOptionsItemSelected(item)
