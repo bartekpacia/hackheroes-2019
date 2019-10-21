@@ -27,6 +27,7 @@ private const val TAG = "MainActivity"
 private const val REQUEST_CODE_CAMERA_PERMISSION = 10
 
 class MainActivity : AppCompatActivity() {
+    var scanCount = 0
 
     private val viewModel: MainActivityViewModel by viewModels()
 
@@ -45,6 +46,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewModel.results.observe(this) { results: MutableList<VisionLabel> ->
+            scanCount++
+
             progressBar.visibility = INVISIBLE
 
             if (results.size > 0) {
@@ -52,7 +55,11 @@ class MainActivity : AppCompatActivity() {
                 intent.putParcelableArrayListExtra("results", ArrayList(results.toList()))
 
                 startActivity(intent)
-            } else Toast.makeText(this, "no results!", LENGTH_SHORT).show()
+            } else {
+                if (scanCount > 1) {
+                    Toast.makeText(this, "Brak wyników :(", LENGTH_SHORT).show()
+                }
+            }
         }
     }
 

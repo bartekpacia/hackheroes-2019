@@ -6,6 +6,7 @@ import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.activity_results.*
 import pl.baftek.hackheroes_2019.R
@@ -69,10 +70,17 @@ class ResultsActivity : AppCompatActivity() {
         if (papers > plastics && papers > glasses) material = Material.PAPER
         if (glasses > plastics && glasses > papers) material = Material.GLASS
 
+        if (material == Material.UNKNOWN) {
+            textMaterialType.isVisible = false
+            textDecayTime.isVisible = false
+            textError.isVisible = true
+            textHeading.text = "Przepraszam, nie wiem co to"
+        }
+
         Log.d(TAG, "plastics: $plastics papers: $papers")
 
 
-        textMaterialType.text = material.type
+        textMaterialType.text = material.type + "?"
         textMaterialType.setTextColor(ContextCompat.getColor(this, material.color))
         textDecayTime.text = "Czas rozkładu: " + material.decayTime
 

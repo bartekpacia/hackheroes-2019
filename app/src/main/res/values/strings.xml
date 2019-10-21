@@ -3,4 +3,6 @@
     <string name="scan">Skanuj</string>
     <string name="app_bar_action">Pomoc</string>
     <string name="help_placeholder">Przykładowa informacja nt. segragacji odpadów</string>
+    <string name="hmm_looks_like">Hmm...wygląda na</string>
+    <string name="not_detected">Spróbuj jeszcze raz i upewnij się, że odpad jest dobrze widoczny na zdjęciu</string>
 </resources>
