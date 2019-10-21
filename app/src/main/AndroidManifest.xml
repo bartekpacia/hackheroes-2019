@@ -11,7 +11,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".HelpActivity"></activity>
 
         <meta-data
             android:name="com.google.firebase.ml.vision.DEPENDENCIES"
@@ -26,7 +25,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activities.ResultsActivity" />
+        <activity
+            android:name=".activities.ResultsActivity"
+            android:parentActivityName=".activities.MainActivity" />
+        <activity
+            android:name=".HelpActivity"
+            android:parentActivityName=".activities.MainActivity" />
     </application>
 
 </manifest>

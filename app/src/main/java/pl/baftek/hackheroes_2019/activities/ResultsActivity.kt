@@ -22,7 +22,7 @@ class ResultsActivity : AppCompatActivity() {
     private val plasticRegex: Array<String> = arrayOf("Plastic bottle", "Water bottle", "Water", "Bottle")
     private val paperRegex: Array<String> =
         arrayOf("Paper", "Cardboard", "Text", "Notebook", "Drawing", "Paper product")
-    private val glassRegex: Array<String> = arrayOf("Glass bottle")
+    private val glassRegex: Array<String> = arrayOf("Glass", "Glass bottle", "Pint glass", "Highball glass", "Beer")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
