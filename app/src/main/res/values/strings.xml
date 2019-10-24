@@ -3,6 +3,17 @@
     <string name="scan">Skanuj</string>
     <string name="app_bar_action">Pomoc</string>
     <string name="help_placeholder">Przykładowa informacja nt. segragacji odpadów</string>
-    <string name="hmm_looks_like">Hmm...wygląda na</string>
+    <string name="hmm_looks_like">Hmm…wygląda na</string>
     <string name="not_detected">Spróbuj jeszcze raz i upewnij się, że odpad jest dobrze widoczny na zdjęciu</string>
+    <string name="welcome_to_app">Witamy w EkoSkanerze!</string>
+    <string name="app_description">EkoSkaner to aplikacja pomagająca w recyklingu. Zeskanuj przedmiot
+        i dowiedz się, ile lat zajmie jego rozkład i do jakiego kosza go wrzucić.</string>
+
+    <string name="app_warning"><b>Uwaga!</b> Jest to wstępny, koncepcyjny projekt w bardzo wczesnej fazie
+        rozwoju. Bardziej niż o poprawną i finalną implementację, chodzi tu o interkatywne zaprezentowanie naszego pomysłu
+        dot. ewentualnego sposobu działania takiej aplikacji. Z tego też powodu wachlarz rozpoznawanych
+        przedmiotów jest skrajnie skromny, tj: plastikowe butelki, papier, szklane butelki. Również sam
+        sposób działania jest na razie raczej prymitywny.</string>
+
+    <string name="footer">Stworzone na hackathon HackHeroes 2019 przed Bartłomieja Pacia i Huberta Zimnego.</string>
 </resources>
